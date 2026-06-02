@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');

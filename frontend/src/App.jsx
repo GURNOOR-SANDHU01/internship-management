@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from './context/AuthContext';

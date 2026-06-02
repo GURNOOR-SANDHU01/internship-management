@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 import { useState, useEffect, useContext } from 'react';
 import { 
   Search, Briefcase, MapPin, DollarSign, LayoutDashboard, 

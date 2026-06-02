@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 import { useState, useContext, useEffect } from 'react';
 import { 
   Briefcase, Users, LayoutDashboard, Plus, Edit, Trash2, 

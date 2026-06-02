@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 const express = require('express');
 const router = express.Router();
 const { getAllUsers, getStats, updateUserRole, deleteUser, getAllInternships } = require('../controllers/adminController');

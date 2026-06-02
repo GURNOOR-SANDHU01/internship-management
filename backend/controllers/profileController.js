@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 const StudentProfile = require('../models/StudentProfile');
 const RecruiterProfile = require('../models/RecruiterProfile');
 

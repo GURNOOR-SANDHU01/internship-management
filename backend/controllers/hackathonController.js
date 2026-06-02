@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 const Hackathon = require('../models/Hackathon');
 
 // @desc    Get all hackathons

@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 const Internship = require('../models/Internship');
 
 // @desc    Get all internships

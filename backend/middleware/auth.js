@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 const jwt = require('jsonwebtoken');
 
 exports.protect = (req, res, next) => {

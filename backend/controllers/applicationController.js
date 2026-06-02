@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 const Application = require('../models/Application');
 const Internship = require('../models/Internship');
 

@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 import { useState, useEffect } from 'react';
 import { Trophy, Calendar, Users, ArrowRight } from 'lucide-react';
 

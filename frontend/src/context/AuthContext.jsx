@@ -1,3 +1,6 @@
+/*
+  @author Gurnoor SINGH (102316101) 
+*/
 import { createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext();
