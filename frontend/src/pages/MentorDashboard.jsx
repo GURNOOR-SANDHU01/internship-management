@@ -8,18 +8,16 @@ import {
   Plus, Trash2, Edit, X
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const MentorDashboard = () => {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [interns, setInterns] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Task modal state
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
-  const [taskForm, setTaskForm] = useState({ intern: '', title: '', description: '', priority: 'Medium', dueDate: '' });
 
   // Feedback state
   const [feedbackForm, setFeedbackForm] = useState({ assignmentId: '', text: '', rating: 5 });
@@ -50,54 +48,10 @@ const MentorDashboard = () => {
   // Task handlers
   const handleOpenTaskModal = (task = null) => {
     if (task) {
-      setEditingTask(task);
-      setTaskForm({
-        intern: task.intern?._id || task.intern,
-        title: task.title,
-        description: task.description || '',
-        priority: task.priority,
-        dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
-      });
+      navigate(`/mentor/edit-task/${task._id}`, { state: { task } });
     } else {
-      setEditingTask(null);
-      setTaskForm({ intern: interns[0]?.intern?._id || '', title: '', description: '', priority: 'Medium', dueDate: '' });
+      navigate('/mentor/assign-task');
     }
-    setIsTaskModalOpen(true);
-  };
-
-  const handleSubmitTask = async (e) => {
-    e.preventDefault();
-    if (!taskForm.intern) {
-      alert('You must select an intern to assign a task.');
-      return;
-    }
-    
-    try {
-      const token = localStorage.getItem('token');
-      const url = editingTask ? `http://localhost:5002/api/mentor/tasks/${editingTask._id}` : 'http://localhost:5002/api/mentor/tasks';
-      const method = editingTask ? 'PUT' : 'POST';
-      
-      const payload = { ...taskForm };
-      if (!payload.dueDate) delete payload.dueDate; // Prevent casting errors for empty dates
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        if (editingTask) {
-          setTasks(tasks.map(t => t._id === saved._id ? saved : t));
-        } else {
-          setTasks([saved, ...tasks]);
-        }
-        setIsTaskModalOpen(false);
-      } else { 
-        const errData = await res.json().catch(() => ({}));
-        alert(errData.message || 'Failed to save task'); 
-      }
-    } catch (err) { console.error(err); alert(err.message || 'Error saving task'); }
   };
 
   const handleDeleteTask = async (id) => {
@@ -107,8 +61,11 @@ const MentorDashboard = () => {
       const res = await fetch(`http://localhost:5002/api/mentor/tasks/${id}`, {
         method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) setTasks(tasks.filter(t => t._id !== id));
-    } catch (err) { console.error(err); }
+      if (res.ok) {
+        setTasks(tasks.filter(t => t._id !== id));
+        toast.success('Task deleted successfully');
+      }
+    } catch (err) { console.error(err); toast.error('Error deleting task'); }
   };
 
   const handleToggleTaskStatus = async (task) => {
@@ -141,10 +98,10 @@ const MentorDashboard = () => {
       if (res.ok) {
         const updated = await res.json();
         setInterns(interns.map(i => i._id === updated._id ? updated : i));
-        alert('Feedback submitted!');
+        toast.success('Feedback submitted!');
         setFeedbackForm({ ...feedbackForm, text: '', rating: 5 });
-      } else { alert('Failed to submit feedback'); }
-    } catch (err) { console.error(err); }
+      } else { toast.error('Failed to submit feedback'); }
+    } catch (err) { console.error(err); toast.error('Error submitting feedback'); }
     finally { setFeedbackSaving(false); }
   };
 
@@ -393,59 +350,6 @@ const MentorDashboard = () => {
           {activeTab === 'feedback' && renderFeedback()}
         </div>
       </main>
-
-      {/* Task Modal */}
-      {isTaskModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsTaskModalOpen(false)}></div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">{editingTask ? 'Edit Task' : 'Assign New Task'}</h3>
-                <form id="task-form" onSubmit={handleSubmitTask} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Intern</label>
-                    <select name="intern" value={taskForm.intern} onChange={e => setTaskForm({...taskForm, intern: e.target.value})} required
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
-                      <option value="">-- Select --</option>
-                      {interns.map(a => <option key={a._id} value={a.intern?._id}>{a.intern?.name}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Title</label>
-                    <input type="text" value={taskForm.title} onChange={e => setTaskForm({...taskForm, title: e.target.value})} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea value={taskForm.description} onChange={e => setTaskForm({...taskForm, description: e.target.value})} rows="2" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm"></textarea>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Priority</label>
-                      <select value={taskForm.priority} onChange={e => setTaskForm({...taskForm, priority: e.target.value})}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white focus:ring-teal-500 focus:border-teal-500 sm:text-sm">
-                        <option value="High">High</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Low">Low</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Due Date</label>
-                      <input type="date" value={taskForm.dueDate} onChange={e => setTaskForm({...taskForm, dueDate: e.target.value})}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-teal-500 focus:border-teal-500 sm:text-sm" />
-                    </div>
-                  </div>
-                </form>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="submit" form="task-form" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-teal-600 text-white font-medium hover:bg-teal-700 sm:ml-3 sm:w-auto sm:text-sm">Save</button>
-                <button type="button" onClick={() => setIsTaskModalOpen(false)} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

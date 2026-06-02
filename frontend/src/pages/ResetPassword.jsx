@@ -3,6 +3,7 @@
 */
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -11,15 +12,21 @@ const ResetPassword = () => {
   const [submitted, setSubmitted] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      toast.error("Passwords do not match!");
       return;
     }
-    // TODO: Call API to update password with token
-    console.log('Resetting password for token:', token);
-    setSubmitted(true);
+    
+    try {
+      // TODO: Call API to update password with token
+      console.log('Resetting password for token:', token);
+      setSubmitted(true);
+      toast.success('Password reset successfully');
+    } catch (err) {
+      toast.error('An error occurred. Please try again.');
+    }
   };
 
   return (

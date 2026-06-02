@@ -14,6 +14,9 @@ import MentorDashboard from './pages/MentorDashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
+import CreateInternship from './pages/CreateInternship';
+import AssignTask from './pages/AssignTask';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const { user, logout } = useContext(AuthContext);
@@ -21,6 +24,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-gray-50">
+        <Toaster position="top-right" />
         <header className="bg-white shadow-sm py-4 px-6 flex justify-between items-center">
           <h1 className="text-xl font-bold text-primary">Internship Platform</h1>
           <nav className="flex items-center gap-6">
@@ -64,6 +68,26 @@ function App() {
             <Route path="/mentor/dashboard" element={
               <ProtectedRoute allowedRoles={['mentor']}>
                 <MentorDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/recruiter/create-internship" element={
+              <ProtectedRoute allowedRoles={['recruiter']}>
+                <CreateInternship />
+              </ProtectedRoute>
+            } />
+            <Route path="/recruiter/edit-internship/:id" element={
+              <ProtectedRoute allowedRoles={['recruiter']}>
+                <CreateInternship />
+              </ProtectedRoute>
+            } />
+            <Route path="/mentor/assign-task" element={
+              <ProtectedRoute allowedRoles={['mentor']}>
+                <AssignTask />
+              </ProtectedRoute>
+            } />
+            <Route path="/mentor/edit-task/:id" element={
+              <ProtectedRoute allowedRoles={['mentor']}>
+                <AssignTask />
               </ProtectedRoute>
             } />
             <Route path="/" element={

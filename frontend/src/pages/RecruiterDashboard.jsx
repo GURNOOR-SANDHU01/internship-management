@@ -8,20 +8,16 @@ import {
   BarChart3, FileText, Filter, X
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const RecruiterDashboard = () => {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [internships, setInternships] = useState([]);
   const [applicants, setApplicants] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Internship form state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingInternship, setEditingInternship] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '', description: '', requirements: '', stipend: '', location: '', type: 'On-site', companyName: ''
-  });
 
   // Company profile state
   const [companyProfile, setCompanyProfile] = useState({
@@ -84,53 +80,17 @@ const RecruiterDashboard = () => {
       });
       if (res.ok) {
         setApplicants(applicants.map(app => app._id === applicationId ? { ...app, status: newStatus } : app));
-      } else { alert('Failed to update status'); }
-    } catch (error) { console.error('Status update error:', error); }
+        toast.success(`Status updated to ${newStatus}`);
+      } else { toast.error('Failed to update status'); }
+    } catch (error) { console.error('Status update error:', error); toast.error('Error updating status'); }
   };
 
   const handleOpenCreateModal = () => {
-    setEditingInternship(null);
-    setFormData({ title: '', description: '', requirements: '', stipend: '', location: '', type: 'On-site', companyName: companyProfile.companyName || '' });
-    setIsModalOpen(true);
+    navigate('/recruiter/create-internship');
   };
 
   const handleOpenEditModal = (internship) => {
-    setEditingInternship(internship);
-    setFormData({
-      title: internship.title, description: internship.description,
-      requirements: Array.isArray(internship.requirements) ? internship.requirements.join(', ') : internship.requirements,
-      stipend: internship.stipend, location: internship.location, type: internship.type,
-      companyName: internship.companyName || ''
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => { setIsModalOpen(false); setEditingInternship(null); };
-  const handleFormChange = (e) => { setFormData({ ...formData, [e.target.name]: e.target.value }); };
-
-  const handleSubmitInternship = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      const reqsArray = formData.requirements.split(',').map(r => r.trim()).filter(r => r);
-      const payload = { ...formData, requirements: reqsArray };
-      const url = editingInternship ? `http://localhost:5002/api/internships/${editingInternship._id}` : 'http://localhost:5002/api/internships';
-      const method = editingInternship ? 'PUT' : 'POST';
-      const res = await fetch(url, {
-        method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        const saved = await res.json();
-        if (editingInternship) {
-          setInternships(internships.map(i => i._id === saved._id ? saved : i));
-        } else { setInternships([...internships, saved]); }
-        handleCloseModal();
-      } else { 
-        const errorData = await res.json().catch(() => ({}));
-        alert(errorData.message || 'Failed to save internship'); 
-      }
-    } catch (err) { console.error('Error saving internship:', err); alert(err.message || 'Error saving internship'); }
+    navigate(`/recruiter/edit-internship/${internship._id}`, { state: { internship } });
   };
 
   const handleDeleteInternship = async (id) => {
@@ -140,9 +100,12 @@ const RecruiterDashboard = () => {
       const res = await fetch(`http://localhost:5002/api/internships/${id}`, {
         method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) { setInternships(internships.filter(i => i._id !== id)); }
-      else { alert('Failed to delete internship'); }
-    } catch (err) { console.error('Error deleting internship:', err); }
+      if (res.ok) { 
+        setInternships(internships.filter(i => i._id !== id)); 
+        toast.success('Internship deleted successfully');
+      }
+      else { toast.error('Failed to delete internship'); }
+    } catch (err) { console.error('Error deleting internship:', err); toast.error('Error deleting internship'); }
   };
 
   const handleSaveCompanyProfile = async () => {
@@ -154,9 +117,9 @@ const RecruiterDashboard = () => {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(companyProfile)
       });
-      if (res.ok) { alert('Company profile saved!'); }
-      else { alert('Failed to save profile'); }
-    } catch (err) { console.error(err); }
+      if (res.ok) { toast.success('Company profile saved!'); }
+      else { toast.error('Failed to save profile'); }
+    } catch (err) { console.error(err); toast.error('Error saving profile'); }
     finally { setProfileSaving(false); }
   };
 
@@ -203,6 +166,7 @@ const RecruiterDashboard = () => {
         </button>
       </div>
       <div className="bg-white shadow-sm border border-gray-100 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -234,6 +198,7 @@ const RecruiterDashboard = () => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
@@ -242,6 +207,7 @@ const RecruiterDashboard = () => {
     <div className="animate-in fade-in space-y-6">
       <p className="text-sm text-gray-500">{applicants.length} applicant{applicants.length !== 1 ? 's' : ''}</p>
       <div className="bg-white shadow-sm border border-gray-100 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -279,6 +245,7 @@ const RecruiterDashboard = () => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
@@ -352,61 +319,6 @@ const RecruiterDashboard = () => {
           {activeTab === 'applicants' && renderApplicants()}
         </div>
       </main>
-
-      {/* Internship Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={handleCloseModal}></div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">{editingInternship ? 'Edit Internship' : 'Create Internship'}</h3>
-                <form id="internship-form" onSubmit={handleSubmitInternship} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Title</label>
-                    <input type="text" name="title" value={formData.title} onChange={handleFormChange} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Company Name</label>
-                    <input type="text" name="companyName" value={formData.companyName} onChange={handleFormChange} required className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea name="description" value={formData.description} onChange={handleFormChange} required rows="3" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"></textarea>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Requirements (comma separated)</label>
-                    <input type="text" name="requirements" value={formData.requirements} onChange={handleFormChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Stipend</label>
-                      <input type="text" name="stipend" value={formData.stipend} onChange={handleFormChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Location</label>
-                      <input type="text" name="location" value={formData.location} onChange={handleFormChange} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Type</label>
-                    <select name="type" value={formData.type} onChange={handleFormChange} className="mt-1 block w-full border bg-white border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-                      <option value="On-site">On-site</option>
-                      <option value="Remote">Remote</option>
-                      <option value="Hybrid">Hybrid</option>
-                    </select>
-                  </div>
-                </form>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="submit" form="internship-form" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-blue-600 sm:ml-3 sm:w-auto sm:text-sm">Save</button>
-                <button type="button" onClick={handleCloseModal} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

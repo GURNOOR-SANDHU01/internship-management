@@ -8,6 +8,7 @@ import {
   Bell, Activity, Check, X, Building, Trash2
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -50,10 +51,10 @@ const AdminDashboard = () => {
         body: JSON.stringify({ role: newRole })
       });
       if (res.ok) {
-        const updated = await res.json();
-        setUsers(users.map(u => u._id === updated._id ? updated : u));
-      } else { alert('Failed to update role'); }
-    } catch (err) { console.error(err); }
+        setUsers(users.map(u => u._id === userId ? { ...u, role: newRole } : u));
+        toast.success(`Role updated to ${newRole}`);
+      } else { toast.error('Failed to update role'); }
+    } catch (err) { console.error(err); toast.error('Error updating role'); }
   };
 
   const handleDeleteUser = async (userId) => {
@@ -65,11 +66,12 @@ const AdminDashboard = () => {
       });
       if (res.ok) {
         setUsers(users.filter(u => u._id !== userId));
+        toast.success('User deleted successfully');
       } else {
         const data = await res.json();
-        alert(data.message || 'Failed to delete');
+        toast.error(data.message || 'Failed to delete');
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); toast.error('Error deleting user'); }
   };
 
   const renderOverview = () => (

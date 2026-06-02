@@ -8,6 +8,7 @@ import {
   CheckCircle, Clock, UploadCloud, BookmarkCheck
 } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const StudentDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -84,7 +85,7 @@ const StudentDashboard = () => {
       });
       
       if (res.ok) {
-        alert('Successfully applied!');
+        toast.success('Successfully applied!');
         const appRes = await fetch('http://localhost:5002/api/applications/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -94,11 +95,11 @@ const StudentDashboard = () => {
         }
       } else {
         const errorData = await res.json();
-        alert(errorData.message || 'Failed to apply');
+        toast.error(errorData.message || 'Failed to apply');
       }
     } catch (error) {
       console.error('Apply error:', error);
-      alert('An error occurred while applying.');
+      toast.error('An error occurred while applying.');
     } finally {
       setApplying(null);
     }
@@ -124,13 +125,13 @@ const StudentDashboard = () => {
         body: JSON.stringify(payload)
       });
       if (res.ok) {
-        alert('Profile saved!');
+        toast.success('Profile saved!');
       } else {
-        alert('Failed to save profile');
+        toast.error('Failed to save profile');
       }
     } catch (err) {
       console.error(err);
-      alert('Error saving profile');
+      toast.error('Error saving profile');
     } finally {
       setProfileSaving(false);
     }
